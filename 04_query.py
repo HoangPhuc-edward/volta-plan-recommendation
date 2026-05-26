@@ -12,15 +12,15 @@ from vertex_query import query_vertex_with_fallback
 PROJECT_ID = "project-ce1ff6dc-7e15-4f39-bb3"
 REGION = "us-central1"
 
-ENDPOINT_RESOURCE_NAME = "projects/933786093071/locations/us-central1/indexEndpoints/6138012666943242240"
-DEPLOYED_INDEX_ID = "energy_plan_cosine_index"
+ENDPOINT_RESOURCE_NAME = "projects/933786093071/locations/us-central1/indexEndpoints/7108256911664873472"
+DEPLOYED_INDEX_ID = "energy_plan_endpoint_1779756140590"
 
 MODEL_NAME = "Alibaba-NLP/gte-modernbert-base"
 
 INPUT_CSV = "inputs/ready_test_users.csv"
 OUTPUT_DIR = "outputs"
 
-TARGET_K = 20
+TARGET_K = 10
 PER_LEVEL_TOP_K = 50
 
 

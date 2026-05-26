@@ -352,7 +352,7 @@ def evaluate_recommendation_file(
 
 if __name__ == "__main__":
     evaluate_recommendation_file(
-        result_json_path="outputs/vertex_test_results_20260521_104709.json",
+        result_json_path="outputs/vertex_test_results_20260526_083841.json",
         processed_plans_csv="inputs/processed_plans.csv",
         output_dir="outputs",
         model_name="Alibaba-NLP/gte-modernbert-base",

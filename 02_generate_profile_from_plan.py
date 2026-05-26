@@ -350,6 +350,9 @@ def build_user_profile_from_plan(row, idx):
             },
 
             "plan": {
+                "retailer_name": hard.get(
+                    "retailer_name"
+                ),
                 "tariff_type_preference": (
                     tariff_type_to_user_preference(
                         tariff_type

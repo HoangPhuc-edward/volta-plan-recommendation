@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Volta Plan Recommendation</title>
+
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+      line-height: 1.4;
+    }
+
+    textarea {
+      width: 100%;
+      height: 300px;
+      font-family: monospace;
+      font-size: 13px;
+    }
+
+    input {
+      width: 100%;
+      padding: 8px;
+      margin-bottom: 10px;
+    }
+
+    button {
+      padding: 10px 16px;
+      cursor: pointer;
+    }
+
+    .plan {
+      border: 1px solid #ccc;
+      padding: 12px;
+      margin-top: 20px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 10px;
+    }
+
+    th, td {
+      border: 1px solid #ccc;
+      padding: 8px;
+      text-align: left;
+    }
+
+    th {
+      background: #f2f2f2;
+    }
+
+    .error {
+      color: red;
+      margin-top: 10px;
+      white-space: pre-wrap;
+    }
+
+    .loading {
+      margin-top: 10px;
+      color: blue;
+    }
+
+    pre {
+      background: #f7f7f7;
+      padding: 10px;
+      overflow-x: auto;
+    }
+  </style>
+</head>
+
+<body>
+
+  <h1>Volta Plan Recommendation</h1>
+
+  <h3>User Profile JSON</h3>
+  <textarea id="jsonInput" placeholder="Paste user_profile JSON here"></textarea>
+
+  <h3>Current Plan ID</h3>
+  <input
+    id="currentPlanId"
+    type="text"
+    placeholder="Example: 1ST937721MRE1@EME"
+  />
+
+  <button onclick="recommendPlans()">Recommend Plans</button>
+
+  <div id="status"></div>
+  <div id="error" class="error"></div>
+  <div id="results"></div>
+
+  <script>
+    const API_URL = "http://127.0.0.1:8000/recommend-plans";
+
+    function money(value) {
+      if (value === null || value === undefined || isNaN(value)) {
+        return "-";
+      }
+
+      return "$" + Number(value).toFixed(2);
+    }
+
+    function percent(value) {
+      if (value === null || value === undefined || isNaN(value)) {
+        return "-";
+      }
+
+      return Number(value).toFixed(2) + "%";
+    }
+
+    function getPlanName(plan) {
+      if (!plan) return "-";
+
+      return (
+        plan.display_name ||
+        plan.plan_name ||
+        plan.name ||
+        plan.planData?.display_name ||
+        "-"
+      );
+    }
+
+    function getRetailerName(plan) {
+      if (!plan) return "-";
+
+      return (
+        plan.brand_name ||
+        plan.retailer_name ||
+        plan.brand ||
+        "-"
+      );
+    }
+
+    function getTariffType(plan, result) {
+      if (plan && plan.tariff_type) {
+        return plan.tariff_type;
+      }
+
+      if (result && result.cost_breakdown && result.cost_breakdown.tariff_type) {
+        return result.cost_breakdown.tariff_type;
+      }
+
+      return "-";
+    }
+
+    function renderReasons(reasons) {
+      if (!Array.isArray(reasons) || reasons.length === 0) {
+        return "<p>-</p>";
+      }
+
+      let html = "<ul>";
+
+      for (const reason of reasons) {
+        html += `<li>${escapeHtml(reason)}</li>`;
+      }
+
+      html += "</ul>";
+
+      return html;
+    }
+
+    function renderCostComparison(compare) {
+      if (!compare) {
+        return "<p>No current plan comparison available.</p>";
+      }
+
+      return `
+        <table>
+          <thead>
+            <tr>
+              <th>Cost Item</th>
+              <th>Current Plan</th>
+              <th>Difference</th>
+              <th>Difference %</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Monthly Cost</td>
+              <td>${money(compare.current_plan_cost)}</td>
+              <td>${money(compare.monthly_cost_difference)}</td>
+              <td>${percent(compare.monthly_cost_percentage_difference)}</td>
+            </tr>
+            <tr>
+              <td>E1 Cost</td>
+              <td>-</td>
+              <td>${money(compare.e1_cost_difference)}</td>
+              <td>${percent(compare.e1_cost_percentage_difference)}</td>
+            </tr>
+            <tr>
+              <td>E2 Cost</td>
+              <td>-</td>
+              <td>${money(compare.e2_cost_difference)}</td>
+              <td>${percent(compare.e2_cost_percentage_difference)}</td>
+            </tr>
+            <tr>
+              <td>Supply Charge</td>
+              <td>-</td>
+              <td>${money(compare.supply_charge_difference)}</td>
+              <td>${percent(compare.supply_charge_percentage_difference)}</td>
+            </tr>
+          </tbody>
+        </table>
+      `;
+    }
+
+    function renderBreakdown(breakdown) {
+      if (!breakdown) {
+        return "<p>No cost breakdown.</p>";
+      }
+
+      return `
+        <table>
+          <thead>
+            <tr>
+              <th>Item</th>
+              <th>Value</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>E1 Net Daily kWh</td>
+              <td>${breakdown.e1_net_daily_kwh ?? "-"}</td>
+            </tr>
+            <tr>
+              <td>E2 Daily kWh</td>
+              <td>${breakdown.e2_daily_kwh ?? "-"}</td>
+            </tr>
+            <tr>
+              <td>B1 Export Daily kWh</td>
+              <td>${breakdown.b1_export_daily_kwh ?? "-"}</td>
+            </tr>
+            <tr>
+              <td>E1 Cost</td>
+              <td>${money(breakdown.e1_cost)}</td>
+            </tr>
+            <tr>
+              <td>E2 Cost</td>
+              <td>${money(breakdown.e2_cost)}</td>
+            </tr>
+            <tr>
+              <td>Solar Credit</td>
+              <td>${money(breakdown.solar_credit)}</td>
+            </tr>
+            <tr>
+              <td>Supply Charge</td>
+              <td>${money(breakdown.supply_charge)}</td>
+            </tr>
+            <tr>
+              <td>Monthly Days</td>
+              <td>${breakdown.monthly_days ?? "-"}</td>
+            </tr>
+          </tbody>
+        </table>
+      `;
+    }
+
+    function renderResults(data) {
+      const resultsDiv = document.getElementById("results");
+      resultsDiv.innerHTML = "";
+
+      if (!data || !Array.isArray(data.results)) {
+        resultsDiv.innerHTML = "<p>No results.</p>";
+        return;
+      }
+
+      let html = `
+        <h2>Recommended Plans</h2>
+        <p>Total results: ${data.num_results}</p>
+      `;
+
+      for (const result of data.results) {
+        const plan = result.plan_data || {};
+
+        html += `
+          <div class="plan">
+            <h3>${escapeHtml(getPlanName(plan))}</h3>
+
+            <p><b>Plan ID:</b> ${escapeHtml(result.plan_id)}</p>
+            <p><b>Retailer:</b> ${escapeHtml(getRetailerName(plan))}</p>
+            <p><b>Tariff Type:</b> ${escapeHtml(getTariffType(plan, result))}</p>
+            <p><b>Estimated Monthly Cost:</b> ${money(result.net_monthly_cost)}</p>
+            <p><b>Distance:</b> ${result.distance ?? "-"}</p>
+            <p><b>Filter Match Level:</b> ${result.filter_match_level ?? "-"}</p>
+
+            <h4>Why Selected</h4>
+            ${renderReasons(result.why_selected)}
+
+            <h4>Cost Comparison With Current Plan</h4>
+            ${renderCostComparison(result.compare_with_current_plan)}
+
+            <h4>Cost Breakdown</h4>
+            ${renderBreakdown(result.cost_breakdown)}
+          </div>
+        `;
+      }
+
+      resultsDiv.innerHTML = html;
+    }
+
+    async function recommendPlans() {
+      const jsonText = document.getElementById("jsonInput").value.trim();
+      const currentPlanId = document.getElementById("currentPlanId").value.trim();
+
+      const statusDiv = document.getElementById("status");
+      const errorDiv = document.getElementById("error");
+      const resultsDiv = document.getElementById("results");
+
+      statusDiv.innerHTML = "";
+      errorDiv.innerHTML = "";
+      resultsDiv.innerHTML = "";
+
+      let parsedJson;
+
+      try {
+        parsedJson = JSON.parse(jsonText);
+      } catch (error) {
+        errorDiv.innerHTML = "Invalid JSON:\n" + error.message;
+        return;
+      }
+
+      const body = {
+        user_profile: parsedJson.user_profile || parsedJson,
+        current_plan_id: currentPlanId || null,
+        target_k: 20,
+        per_level_top_k: 50,
+        top_n: 5
+      };
+
+      statusDiv.innerHTML = "<p class='loading'>Loading recommendations...</p>";
+
+      try {
+        const response = await fetch(API_URL, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify(body)
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(JSON.stringify(data, null, 2));
+        }
+
+        statusDiv.innerHTML = "";
+        renderResults(data);
+
+      } catch (error) {
+        statusDiv.innerHTML = "";
+        errorDiv.innerHTML = "Request failed:\n" + error.message;
+      }
+    }
+
+    function escapeHtml(value) {
+      return String(value)
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+    }
+  </script>
+
+</body>
+</html>

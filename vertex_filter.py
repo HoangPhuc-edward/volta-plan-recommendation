@@ -10,23 +10,27 @@ DEFAULT_FALLBACK_LEVELS = [
     },
     {
         "filter_match_level": 6,
-        "drop_fields": ["has_ev"]
+        "drop_fields": ["retailer_name"]
     },
     {
         "filter_match_level": 5,
-        "drop_fields": ["has_ev", "has_solar"]
+        "drop_fields": ["has_ev", "retailer_name"]
     },
     {
         "filter_match_level": 4,
-        "drop_fields": ["has_ev", "has_solar", "has_controlled_load"]
+        "drop_fields": ["has_ev", "has_solar", "retailer_name"]
     },
     {
         "filter_match_level": 3,
-        "drop_fields": ["has_ev", "has_solar", "has_controlled_load", "tariff_type"]
+        "drop_fields": ["has_ev", "has_solar", "has_controlled_load", "retailer_name"]
     },
     {
         "filter_match_level": 2,
-        "drop_fields": ["has_ev", "has_solar", "has_controlled_load", "tariff_type", "included_postcodes"]
+        "drop_fields": ["has_ev", "has_solar", "has_controlled_load", "tariff_type", "retailer_name"]
+    },
+    {
+        "filter_match_level": 1,
+        "drop_fields": ["has_ev", "has_solar", "has_controlled_load", "tariff_type", "included_postcodes", "retailer_name"]
     },
 ]
 
@@ -131,6 +135,17 @@ def build_vertex_hard_filter(
         if values:
             filters.append(
                 Namespace("customer_type", values, [])
+            )
+
+
+    if "retailer_name" not in drop_fields:
+        values = normalize_filter_values(
+            hard_filter.get("retailer_name")
+        )
+
+        if values:
+            filters.append(
+                Namespace("retailer_name", values, [])
             )
 
     if "distributors" not in drop_fields:
