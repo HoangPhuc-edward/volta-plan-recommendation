@@ -295,6 +295,7 @@ def build_device_from_defaults(
             assumptions.append(f"Applied season='{season}' multiplier ({season_factor}) for '{device_type}'.")
 
     quantity_input = params.get("quantity")
+    
     if quantity_input is not None and (override is None or len(override) == 0) and params.get("daily_kwh") is None:
         try:
             quantity = float(quantity_input)
@@ -377,34 +378,136 @@ def build_device_from_defaults(
     )
 
 
+from typing import Any, Dict, List, Optional
+
+
+def _safe_float(value: Any, default: Optional[float] = None) -> Optional[float]:
+    try:
+        if value is None:
+            return default
+
+        return float(value)
+
+    except Exception:
+        return default
+
+
+def _clip_ratio(value: Any, default: Optional[float] = None) -> Optional[float]:
+    ratio = _safe_float(value, default)
+
+    if ratio is None:
+        return None
+
+    return max(0.0, min(1.0, ratio))
+
+
 def build_solar_generation(
     *,
     has_solar: bool,
     system_size_kw: Optional[float] = None,
+    performance: Optional[Dict[str, Any]] = None,
     override: Optional[Dict[str, Any]] = None,
 ) -> Dict[str, Any]:
+    """
+    Build 24-hour solar generation.
+
+    Priority:
+    1. override.hourly_kwh_24
+    2. override.daily_kwh
+    3. performance.daily_generation_kwh
+    4. system_size_kw * generation_factor
+
+    Notes:
+    - This only creates solar generation.
+    - Export/self-consumption is handled later in derive_solar_export_b1().
+    """
+
     if not has_solar:
         return {
             "solar_gen_24": _zeros_24(),
             "meta": {
-                "source_map": [{"field": "solar.has_solar", "source": "user"}],
-                "assumptions": ["No solar; returned zeros."],
+                "source_map": [
+                    {
+                        "field": "solar.has_solar",
+                        "source": "user"
+                    }
+                ],
+                "assumptions": [
+                    "No solar; returned zeros."
+                ],
             },
         }
 
-    size_kw = float(system_size_kw) if system_size_kw is not None else 6.6
-    daily_gen_kwh = size_kw * 4.0
-    base = _scale_to_daily_kwh([float(x) for x in SOLAR_SHAPE_WEIGHTS_24], daily_gen_kwh)
+    if performance is None:
+        performance = {}
+
+    if override is None:
+        override = {}
+
+    size_kw = _safe_float(system_size_kw, 6.6)
+
     source_map = [
-        {"field": "solar.has_solar", "source": "user"},
-        {"field": "solar.system.size_kw", "source": "user"},
-    ]
-    assumptions = [
-        "Used bell-curve solar shape weights.",
-        "Scaled solar generation by daily_gen_kwh = size_kw * 4.0 (demo placeholder).",
+        {
+            "field": "solar.has_solar",
+            "source": "user"
+        },
+        {
+            "field": "solar.system.size_kw",
+            "source": "user"
+        },
     ]
 
-    out, source_map, extra = _apply_hourly_override(base, override or {}, source_map)
+    assumptions = [
+        "Used bell-curve solar shape weights."
+    ]
+
+    # 1. Prefer explicit daily generation if available
+    daily_generation_kwh = _safe_float(
+        performance.get("daily_generation_kwh"),
+        None
+    )
+
+    if daily_generation_kwh is not None:
+        source_map.append({
+            "field": "solar.performance.daily_generation_kwh",
+            "source": "user"
+        })
+
+        assumptions.append(
+            "Used solar.performance.daily_generation_kwh as daily solar generation."
+        )
+
+    else:
+        # 2. Fallback to size_kw * generation_factor
+        # More conservative than fixed size_kw * 4.0.
+        generation_factor = _safe_float(
+            performance.get("generation_factor_kwh_per_kw_day"),
+            3.5
+        )
+
+        daily_generation_kwh = size_kw * generation_factor
+
+        source_map.append({
+            "field": "solar.performance.generation_factor_kwh_per_kw_day",
+            "source": "default"
+        })
+
+        assumptions.append(
+            "Estimated daily solar generation using "
+            "size_kw * generation_factor_kwh_per_kw_day."
+        )
+
+    base = _scale_to_daily_kwh(
+        [float(x) for x in SOLAR_SHAPE_WEIGHTS_24],
+        daily_generation_kwh
+    )
+
+    out, source_map, extra = _apply_hourly_override(
+        base,
+        override,
+        source_map
+    )
+
     assumptions.extend(extra)
 
     return {
@@ -412,6 +515,8 @@ def build_solar_generation(
         "meta": {
             "source_map": source_map,
             "assumptions": assumptions,
+            "daily_generation_kwh": round(sum(out), 4),
+            "system_size_kw": size_kw,
         },
     }
 
@@ -422,16 +527,80 @@ def derive_solar_export_b1(
     e2_24: List[float],
     solar_gen_24: List[float],
     export_cap_kw: Optional[float] = None,
+    self_consumption_ratio: Optional[float] = None,
+    estimated_export_ratio: Optional[float] = None,
 ) -> List[float]:
-    out = [0.0] * 24
-    cap = float(export_cap_kw) if export_cap_kw is not None else None
+    """
+    Derive B1 solar export.
+
+    Original logic:
+        export = max(solar_generation - onsite_consumption, 0)
+
+    Improved logic:
+        - First calculate physical export by hour.
+        - Then optionally constrain total export using estimated_export_ratio
+          or self_consumption_ratio.
+        - Apply export cap per interval/hour.
+
+    This prevents unrealistic cases where almost all solar is exported
+    simply because generated E1/E2 is too low.
+    """
+
+    raw_export_24 = [0.0] * 24
+
+    cap = _safe_float(export_cap_kw, None)
+
     for h in range(24):
-        export = max(0.0, float(solar_gen_24[h]) - (float(e1_24[h]) + float(e2_24[h])))
+        onsite_consumption = float(e1_24[h]) + float(e2_24[h])
+        solar_generation = float(solar_gen_24[h])
+
+        export = max(
+            0.0,
+            solar_generation - onsite_consumption
+        )
+
+        # Since interval length is 1 hour, export_cap_kw roughly equals kWh/hour cap.
         if cap is not None:
             export = min(export, cap)
-        out[h] = export
-    return out
 
+        raw_export_24[h] = export
+
+    solar_daily_kwh = sum(solar_gen_24)
+
+    if solar_daily_kwh <= 0:
+        return raw_export_24
+
+    export_ratio = _clip_ratio(
+        estimated_export_ratio,
+        None
+    )
+
+    if export_ratio is None:
+        self_ratio = _clip_ratio(
+            self_consumption_ratio,
+            None
+        )
+
+        if self_ratio is not None:
+            export_ratio = 1.0 - self_ratio
+
+    # If user/profile gives export ratio, limit total export to that ratio.
+    if export_ratio is not None:
+        target_export_daily_kwh = solar_daily_kwh * export_ratio
+        raw_export_daily_kwh = sum(raw_export_24)
+
+        if raw_export_daily_kwh > 0:
+            scale_factor = min(
+                1.0,
+                target_export_daily_kwh / raw_export_daily_kwh
+            )
+
+            raw_export_24 = [
+                value * scale_factor
+                for value in raw_export_24
+            ]
+
+    return raw_export_24
 
 def build_interval_read_day_24(user_input: Dict[str, Any]) -> Dict[str, Any]:
     devices_raw = user_input.get("devices")
@@ -496,13 +665,28 @@ def build_interval_read_day_24(user_input: Dict[str, Any]) -> Dict[str, Any]:
     solar = user_input.get("solar") or {}
     if not isinstance(solar, dict):
         solar = {}
+    
+    solar_performance = (
+        solar.get("performance")
+        if isinstance(solar.get("performance"), dict)
+        else {}
+    )
+
     solar_out = build_solar_generation(
         has_solar=bool(solar.get("has_solar")),
-        system_size_kw=solar.get("system", {}).get("size_kw")
-        if isinstance(solar.get("system"), dict)
-        else solar.get("system_size_kw"),
-        override=solar.get("override") if isinstance(solar.get("override"), dict) else None,
+        system_size_kw=(
+            solar.get("system", {}).get("size_kw")
+            if isinstance(solar.get("system"), dict)
+            else solar.get("system_size_kw")
+        ),
+        performance=solar_performance,
+        override=(
+            solar.get("override")
+            if isinstance(solar.get("override"), dict)
+            else None
+        ),
     )
+
 
     export_cap_kw = None
     perf = solar.get("performance") if isinstance(solar.get("performance"), dict) else {}
@@ -514,6 +698,8 @@ def build_interval_read_day_24(user_input: Dict[str, Any]) -> Dict[str, Any]:
         e2_24=e2_24,
         solar_gen_24=solar_out["solar_gen_24"],
         export_cap_kw=export_cap_kw,
+        self_consumption_ratio=solar_performance.get("self_consumption_ratio"),
+        estimated_export_ratio=solar_performance.get("estimated_export_ratio"),
     )
 
     return {

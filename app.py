@@ -42,7 +42,7 @@ ENDPOINT_RESOURCE_NAME = (
     "indexEndpoints/7108256911664873472"
 )
 
-DEPLOYED_INDEX_ID = "energy_plan_endpoint_1779775426827"
+DEPLOYED_INDEX_ID = "energy_plan_endpoint_1779852224601"
 
 MODEL_NAME = "Alibaba-NLP/gte-modernbert-base"
 
@@ -274,6 +274,7 @@ def build_compare_output(
 
     return {
         "current_plan_cost": current_cost,
+        "current_plan_cost_breakdown": current_breakdown,   
         "monthly_cost_difference": new_cost - current_cost,
         "monthly_cost_percentage_difference": safe_percentage_diff(
             new_cost,

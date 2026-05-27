@@ -184,19 +184,19 @@
             </tr>
             <tr>
               <td>E1 Cost</td>
-              <td>-</td>
+              <td>${money(compare.current_plan_cost_breakdown?.e1_cost ?? null)}</td>
               <td>${money(compare.e1_cost_difference)}</td>
               <td>${percent(compare.e1_cost_percentage_difference)}</td>
             </tr>
             <tr>
               <td>E2 Cost</td>
-              <td>-</td>
+              <td>${money(compare.current_plan_cost_breakdown?.e2_cost ?? null)}</td>
               <td>${money(compare.e2_cost_difference)}</td>
               <td>${percent(compare.e2_cost_percentage_difference)}</td>
             </tr>
             <tr>
               <td>Supply Charge</td>
-              <td>-</td>
+              <td>${money(compare.current_plan_cost_breakdown?.supply_charge ?? null)}</td>
               <td>${money(compare.supply_charge_difference)}</td>
               <td>${percent(compare.supply_charge_percentage_difference)}</td>
             </tr>
@@ -281,8 +281,7 @@
             <p><b>Retailer:</b> ${escapeHtml(getRetailerName(plan))}</p>
             <p><b>Tariff Type:</b> ${escapeHtml(getTariffType(plan, result))}</p>
             <p><b>Estimated Monthly Cost:</b> ${money(result.net_monthly_cost)}</p>
-            <p><b>Distance:</b> ${result.distance ?? "-"}</p>
-            <p><b>Filter Match Level:</b> ${result.filter_match_level ?? "-"}</p>
+      
 
             <h4>Why Selected</h4>
             ${renderReasons(result.why_selected)}

@@ -50,6 +50,16 @@ def _normalize_device(device: Dict[str, Any]) -> Dict[str, Any]:
     if "time_of_day" in input_data:
         normalized_input["time_of_day"] = input_data.get("time_of_day")
 
+    if "quantity" in input_data:
+        normalized_input["quantity"] = input_data.get("quantity")
+
+    if "start_hour" in input_data:
+        normalized_input["start_hour"] = input_data.get("start_hour")
+
+    if "end_hour" in input_data:
+        normalized_input["end_hour"] = input_data.get("end_hour")
+
+
     return {
         "enabled": bool(device.get("enabled", False)),
         "input": normalized_input
@@ -124,16 +134,8 @@ def normalize_user_for_calculation(payload: Dict[str, Any]) -> Dict[str, Any]:
         }
     }
 
-    # Match device keys used in sample_profile.json
-    wanted_devices = [
-        "lighting",
-        "refrigerator",
-        "wifi_router",
-        "ev_charging",
-        "electric_hot_water_controlled_load"
-    ]
 
-    for device_name in wanted_devices:
+    for device_name in device_inputs:
         normalized["device_inputs"][device_name] = _normalize_device(
             device_inputs.get(device_name, {})
         )
