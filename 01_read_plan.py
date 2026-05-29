@@ -359,12 +359,13 @@ def transform_row(row):
 
 processed_data = data.map(
     transform_row,
-    remove_columns=data.column_names
 )
 
 processed_data = processed_data.filter(
     lambda row: row["processed_plan"] is not None
 )
+
+
 
 import pandas as pd
 import json
@@ -376,6 +377,10 @@ for row in processed_data:
 
     rows.append({
         "plan_id": processed_plan.get("plan_id"),
+
+        "retailer_name": row["brand_name"],
+
+        "display_name": row["display_name"],
 
         "hard_attributes": json.dumps(
             processed_plan.get("hard_attributes", {}),

@@ -1,0 +1,104 @@
+{
+  "profile_id": "prof_001",
+  "location": {
+    "postcode": "7000"
+  },
+  "household": {
+    "controlled_load_present": false
+  },
+  "device_inputs": {
+    "lighting": {
+      "enabled": true,
+      "input": {
+        "daily_kwh": 1.2,
+        "time_of_day": "evening",
+        "quantity": 10,
+        "start_hour": 18,
+        "end_hour": 23
+      }
+    },
+    "refrigerator": {
+      "enabled": true,
+      "input": {
+        "daily_kwh": 1.0,
+        "quantity": 1,
+        "start_hour": 0,
+        "end_hour": 24
+      }
+    },
+    "wifi_router": {
+      "enabled": true,
+      "input": {
+        "daily_kwh": 0.2,
+        "quantity": 1,
+        "start_hour": 0,
+        "end_hour": 24
+      }
+    },
+    "air_conditioning": {
+      "enabled": true,
+      "input": {
+        "daily_kwh": 3.57,
+        "time_of_day": "evening",
+        "quantity": 1,
+        "start_hour": 17,
+        "end_hour": 23
+      }
+    },
+    "electric_heating": {
+      "enabled": true,
+      "input": {
+        "daily_kwh": 3.23,
+        "time_of_day": "morning",
+        "quantity": 1,
+        "start_hour": 6,
+        "end_hour": 9
+      }
+    },
+    "pool_pump": {
+      "enabled": false,
+      "input": {}
+    },
+    "dishwasher": {
+      "enabled": true,
+      "input": {
+        "daily_kwh": 1.25,
+        "time_of_day": "night",
+        "quantity": 1
+      }
+    },
+    "dryer": {
+      "enabled": true,
+      "input": {
+        "daily_kwh": 3.18,
+        "time_of_day": "evening",
+        "quantity": 1
+      }
+    },
+    "induction_cooktop": {
+      "enabled": true,
+      "input": {
+        "daily_kwh": 1.61,
+        "time_of_day": "evening",
+        "quantity": 1
+      }
+    },
+    "ev_charging": {
+      "enabled": false,
+      "input": {}
+    },
+    "electric_hot_water_controlled_load": {
+      "enabled": false,
+      "input": {}
+    }
+  },
+  "solar": {
+    "has_solar": true,
+    "system": {
+      "size_kw": 5.0
+    },
+    "performance": {
+      "export_cap_kw": null
+    }
+  }
+}

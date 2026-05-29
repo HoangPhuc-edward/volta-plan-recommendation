@@ -7,15 +7,16 @@ from sentence_transformers import SentenceTransformer
 from google.cloud import aiplatform
 
 from vertex_query import query_vertex_with_fallback
+from config import load_config
 
 
-PROJECT_ID = "project-ce1ff6dc-7e15-4f39-bb3"
-REGION = "us-central1"
+_config = load_config()
 
-ENDPOINT_RESOURCE_NAME = "projects/933786093071/locations/us-central1/indexEndpoints/7108256911664873472"
-DEPLOYED_INDEX_ID = "energy_plan_endpoint_1779756140590"
-
-MODEL_NAME = "Alibaba-NLP/gte-modernbert-base"
+PROJECT_ID = _config["PROJECT_ID"]
+REGION = _config["REGION"]
+ENDPOINT_RESOURCE_NAME = _config["ENDPOINT_RESOURCE_NAME"]
+DEPLOYED_INDEX_ID = _config["DEPLOYED_INDEX_ID"]
+MODEL_NAME = _config["MODEL_NAME"]
 
 INPUT_CSV = "inputs/ready_test_users.csv"
 OUTPUT_DIR = "outputs"

@@ -705,6 +705,7 @@ def build_user_profile_from_plan(row, idx):
             
             "plan": {
                 "retailer_name": hard.get("retailer_name"),
+                "current_plan_name": row["display_name"],
                 "tariff_type_preference": tariff_type_to_user_preference(tariff_type),
                 "tariff_type": tariff_type,
                 "controlled_load": has_controlled_load,

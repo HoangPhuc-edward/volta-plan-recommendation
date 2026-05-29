@@ -1,0 +1,337 @@
+{
+  "selected_profile": {
+    "profile_id": "sample-profile-full-001",
+    "created_at": "2026-04-15T09:30:00Z",
+    "updated_at": "2026-04-18T16:45:00Z",
+    "input_meta": {
+      "source_types": [
+        "manual_form",
+        "bill_upload",
+        "interval_import"
+      ],
+      "readiness_level": "high",
+      "overall_input_confidence": 0.92,
+      "missing_fields": [],
+      "conflict_fields": [
+        "energy_usage.monthly_bill"
+      ]
+    },
+    "location": {
+      "postcode": "2000",
+      "address": {
+        "full_address": "1 George St, Sydney NSW 2000",
+        "state": "NSW",
+        "city": "Sydney",
+        "suburb": "Sydney",
+        "street": "George St"
+      },
+      "context": {
+        "distributor_region": "Ausgrid",
+        "climate_zone": "Temperate Coastal",
+        "network_tariff_region": "NSW-RES"
+      }
+    },
+    "household": {
+      "type": "apartment",
+      "ownership": "renting",
+      "people_count": 3,
+      "occupancy_pattern": "daytime family",
+      "work_from_home_days": 2,
+      "has_children": true,
+      "phase_connection": "single_phase",
+      "controlled_load_present": true,
+      "lifestyle_signals": {
+        "has_pool": false,
+        "has_electric_hot_water": true,
+        "has_air_conditioning": true,
+        "has_electric_heating": false
+      },
+      "appliances": {
+        "dryer": false,
+        "dishwasher": true,
+        "pool_pump": false,
+        "induction_cooktop": true
+      }
+    },
+    "energy_usage": {
+      "monthly_bill": 184.75,
+      "month_of_bill": "2026-04",
+      "billing_period_days": 31,
+      "monthly_usage_kwh": 420.0,
+      "daily_usage_kwh": 13.5,
+      "usage_source": "bill_and_interval",
+      "usage_pattern": {
+        "time_of_day": "evening",
+        "weekday_weekend_variation": "high_weekend",
+        "hours_at_home": "6-10"
+      }
+    },
+    "device_inputs": {
+      "lighting": {
+        "enabled": true,
+        "input": {
+          "daily_kwh": 1.8,
+          "quantity": 12,
+          "time_of_day": "evening",
+          "season": "autumn"
+        }
+      },
+      "refrigerator": {
+        "enabled": true,
+        "input": {
+          "quantity": 1,
+          "season": "autumn"
+        }
+      },
+      "wifi_router": {
+        "enabled": true,
+        "input": {
+          "daily_kwh": 0.24,
+          "season": "autumn"
+        }
+      },
+      "air_conditioning": {
+        "enabled": true,
+        "input": {
+          "daily_kwh": 7.5,
+          "time_of_day": "evening",
+          "season": "summer"
+        }
+      },
+      "electric_heating": {
+        "enabled": false,
+        "input": {
+          "daily_kwh": 0.0,
+          "time_of_day": "overnight",
+          "season": "winter"
+        }
+      },
+      "pool_pump": {
+        "enabled": false,
+        "input": {
+          "daily_kwh": 0.0,
+          "time_of_day": "daytime",
+          "season": "summer"
+        }
+      },
+      "dishwasher": {
+        "enabled": true,
+        "input": {
+          "daily_kwh": 1.1,
+          "runs_per_week": 4,
+          "time_of_day": "night",
+          "season": "autumn"
+        }
+      },
+      "dryer": {
+        "enabled": false,
+        "input": {
+          "daily_kwh": 0.0,
+          "runs_per_week": 1,
+          "time_of_day": "evening",
+          "season": "autumn"
+        }
+      },
+      "induction_cooktop": {
+        "enabled": true,
+        "input": {
+          "daily_kwh": 2.0,
+          "time_of_day": "evening",
+          "season": "autumn"
+        }
+      },
+      "ev_charging": {
+        "enabled": false,
+        "input": {
+          "daily_kwh": 0.0,
+          "quantity": 1,
+          "runs_per_week": 5,
+          "time_of_day": "overnight",
+          "season": "autumn"
+        }
+      },
+      "electric_hot_water_controlled_load": {
+        "enabled": true,
+        "input": {
+          "daily_kwh": 4.2,
+          "time_of_day": "overnight",
+          "season": "autumn"
+        }
+      }
+    },
+    "interval_data": [
+      {
+        "timestamp": "2026-04-15T00:00:00",
+        "usage_kwh": 0.42,
+        "interval_minutes": 30
+      },
+      {
+        "timestamp": "2026-04-15T00:30:00",
+        "usage_kwh": 0.39,
+        "interval_minutes": 30
+      }
+    ],
+    "plan": {
+      "current_plan_name": "Demo Saver Plan",
+      "retailer_name": "Demo Retailer",
+      "tariff_type": "flat",
+      "tariff_type_preference": "flat",
+      "fixed_charge_daily": 1.15,
+      "controlled_load": true,
+      "solar_fit_enabled": true,
+      "fit_rate": 0.07,
+      "green_charges": false,
+      "contract": {
+        "type": "fixed",
+        "end_date": "2027-04-30",
+        "discount_structure": "simple_discount"
+      },
+      "billing_options": {
+        "bill_smoothing": true,
+        "direct_debit_required": false,
+        "e_billing_required": true
+      },
+      "eligibility": {
+        "is_new_customer": true,
+        "has_credit": true,
+        "has_senior_card": false,
+        "has_concession": false,
+        "has_smart_meter": true,
+        "requires_smart_meter": true,
+        "region_eligible": true
+      }
+    },
+    "solar": {
+      "has_solar": true,
+      "target_system_size_kw": 6.6,
+      "system": {
+        "size_kw": 6.6,
+        "panel_capacity_kw": 8.0,
+        "inverter_brand": "Fronius",
+        "inverter_model": "Primo 5.0-1",
+        "inverter_phase": "single_phase",
+        "install_year": 2023
+      },
+      "performance": {
+        "export_cap_kw": 5.0,
+        "estimated_export_ratio": 0.45,
+        "self_consumption_ratio": 0.55
+      },
+      "site_conditions": {
+        "rooftop_suitability": "good",
+        "shading_level": "low",
+        "orientation": "north",
+        "tilt_deg": 25.0
+      },
+      "vpp": {
+        "existing": false,
+        "interested": true,
+        "program_name": "Demo VPP",
+        "provider": "Demo Retailer",
+        "eligible": true
+      }
+    },
+    "battery": {
+      "has_battery": true,
+      "target_capacity_kwh": 13.5,
+      "system": {
+        "capacity_kwh": 13.5,
+        "usable_capacity_kwh": 12.1,
+        "round_trip_efficiency": 0.9,
+        "reserve_pct": 0.1,
+        "brand": "Tesla",
+        "model": "Powerwall 2",
+        "install_year": 2024,
+        "coupling": "ac"
+      },
+      "features": {
+        "backup_capability": true,
+        "warranty_years": 10,
+        "health_estimate": "excellent"
+      },
+      "intent": {
+        "wants_battery": true,
+        "budget_range": "10000_20000"
+      }
+    },
+    "ev": {
+      "has_ev": true,
+      "ev_count": 1,
+      "planning_ev": false,
+      "vehicle": {
+        "brand": "Tesla",
+        "model": "Model 3",
+        "battery_size_kwh": 60.0
+      },
+      "vehicles": [
+        {
+          "brand": "Tesla",
+          "model": "Model 3",
+          "year": 2024,
+          "variant": "RWD"
+        }
+      ],
+      "vehicle_usage_weight": [
+        {
+          "vehicle_id": "EV1",
+          "weight": 1.0
+        }
+      ],
+      "charging": {
+        "charger_type": "level_2_fast",
+        "location": "home",
+        "pattern": "overnight",
+        "flexible": true,
+        "home_charging_share": 0.9
+      },
+      "usage": {
+        "daily_km": 34.0,
+        "weekly_km": 240.0,
+        "monthly_km": 1040.0,
+        "annual_km": 12000.0
+      },
+      "preferences": {
+        "interested_in_ev_tariff": true
+      }
+    },
+    "preferences": {
+      "primary_goal": "reduce_bill",
+      "budget_sensitivity": "high",
+      "payment_preference": "monthly",
+      "complexity_tolerance": "medium",
+      "switching_willingness": "high",
+      "install_willingness": "medium",
+      "explanation_depth": "high",
+      "maximum_upfront_budget": 15000.0
+    },
+    "quality": {
+      "observed_fields": [
+        "location.postcode",
+        "household.people_count",
+        "energy_usage.monthly_usage_kwh",
+        "solar.system.size_kw",
+        "battery.system.capacity_kwh",
+        "ev.usage.weekly_km"
+      ],
+      "missing_fields": [],
+      "conflict_fields": [
+        "energy_usage.monthly_bill"
+      ],
+      "provenance_map": {
+        "location.postcode": "manual_form",
+        "energy_usage.monthly_usage_kwh": "bill_upload",
+        "solar.system.size_kw": "installer_record",
+        "battery.system.capacity_kwh": "installer_record",
+        "ev.usage.weekly_km": "manual_form"
+      },
+      "field_confidence": {
+        "location.postcode": 0.99,
+        "household.people_count": 0.94,
+        "energy_usage.monthly_usage_kwh": 0.9,
+        "solar.system.size_kw": 0.97,
+        "battery.system.capacity_kwh": 0.95,
+        "ev.usage.weekly_km": 0.92
+      }
+    }
+  }
+}

@@ -1,0 +1,72 @@
+{
+  "schema_version": "cost_plan_schema_v1",
+  "plan_id": "input",
+  "cost_info": {
+    "pricing_model": "SINGLE_RATE",
+    "tariff_type": "SINGLE_RATE",
+    "billing": {
+      "monthly_days_default": 30,
+      "currency": "AUD"
+    },
+    "supply_charge": {
+      "enabled": true,
+      "structure": "FLAT",
+      "period": "P1D",
+      "daily_supply_charge": 1.27,
+      "daily_supply_charge_type": "SINGLE"
+    },
+    "usage": {
+      "enabled": true,
+      "type": "SINGLE_RATE",
+      "structure": "FLAT",
+      "period": "P1D",
+      "display_name": "General usage",
+      "description": "Anytime",
+      "rates": [
+        {
+          "block_index": 0,
+          "unit_price": 0.264,
+          "unit": "KWH",
+          "limit_kwh": null,
+          "limit_period": "P1D"
+        }
+      ]
+    },
+    "time_of_use": {
+      "enabled": false,
+      "structure": "NONE",
+      "period": null,
+      "rates": []
+    },
+    "controlled_load": {
+      "enabled": false,
+      "structure": "NONE",
+      "period": null,
+      "daily_supply_charge": 0.0,
+      "loads": []
+    },
+    "solar_fit": {
+      "enabled": true,
+      "structure": "FLAT",
+      "apply_policy": "RETAILER_ONLY",
+      "period": "P1D",
+      "rates": [
+        {
+          "block_index": 0,
+          "unit_price": 0.08782,
+          "unit": "KWH",
+          "limit_kwh": null,
+          "limit_period": "P1Y",
+          "payer_type": "RETAILER",
+          "scheme": "OTHER",
+          "description": "Standard feed-in tariff (GST exempt)",
+          "display_name": "Standard feed-in tariff (GST exempt)"
+        }
+      ]
+    },
+    "support": {
+      "level": "SUPPORTED_SIMPLE",
+      "reasons": []
+    }
+  }
+}

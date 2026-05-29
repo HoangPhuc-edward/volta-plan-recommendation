@@ -25,7 +25,14 @@ INPUT_USER_CSV = "inputs/ready_test_users.csv"
 users = load_test_users(INPUT_USER_CSV) 
 user = users[0]
 normalized_user = normalize_user_for_calculation(user["user_profile_json"])
-print(f"Normalized User: {json.dumps(normalized_user, indent=2)}")
+
+
+
+
+with open("schemas/user_calculation_schema.json", "w") as f:
+    json.dump(normalized_user, f, indent=2)
+
+
 
 data = load_dataset("hoangphuc090104/DCR_Energy_Plan")["train"]
 
@@ -33,6 +40,11 @@ for item in data:
     if item["plan_id"] == user["seed_plan_id"]:
         plan = item
         break
+
+
+with open("schemas/plan_calculation_schema.json", "w") as f:
+    json.dump(normalize_plan_for_calculation(plan), f, indent=2)
+
 
 if plan:
     normalized_plan = normalize_plan_for_calculation(plan)

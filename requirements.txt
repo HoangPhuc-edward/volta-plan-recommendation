@@ -1,0 +1,13 @@
+fastapi
+uvicorn[standard]
+pydantic
+pandas
+numpy
+sentence-transformers
+google-cloud-aiplatform
+google-cloud-storage
+datasets
+python-dotenv
+PyYAML
+gunicorn
+jsonschema

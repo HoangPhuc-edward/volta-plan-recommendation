@@ -5,31 +5,31 @@ from google.cloud.aiplatform.matching_engine.matching_engine_index_endpoint impo
 
 DEFAULT_FALLBACK_LEVELS = [
     {
-        "filter_match_level": 7,
+        "filter_match_level": 8,
         "drop_fields": []
     },
     {
-        "filter_match_level": 6,
+        "filter_match_level": 7,
         "drop_fields": ["retailer_name"]
     },
     {
-        "filter_match_level": 5,
+        "filter_match_level": 6,
         "drop_fields": ["has_ev", "retailer_name"]
     },
     {
-        "filter_match_level": 4,
+        "filter_match_level": 5,
         "drop_fields": ["has_ev", "has_solar", "retailer_name"]
     },
     {
-        "filter_match_level": 3,
+        "filter_match_level": 4,
         "drop_fields": ["has_ev", "has_solar", "has_controlled_load", "retailer_name"]
     },
     {
-        "filter_match_level": 2,
+        "filter_match_level": 3,
         "drop_fields": ["has_ev", "has_solar", "has_controlled_load", "tariff_type", "retailer_name"]
     },
     {
-        "filter_match_level": 1,
+        "filter_match_level": 2,
         "drop_fields": ["has_ev", "has_solar", "has_controlled_load", "tariff_type", "included_postcodes", "retailer_name"]
     },
 ]

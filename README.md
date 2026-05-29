@@ -335,6 +335,10 @@ Output:
 outputs/recommendation_evaluation_xxx.json
 ```
 
+## Step 6 — API run
+```bash
+uvicorn app:app --reload
+```
 ---
 
 # 7) Requirements
@@ -356,6 +360,9 @@ Install example:
 ```bash
 pip install pandas datasets sentence-transformers google-cloud-aiplatform numpy torch scikit-learn
 ```
+
+
+
 
 ---
 

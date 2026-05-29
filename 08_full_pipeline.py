@@ -3,6 +3,7 @@ from pathlib import Path
 from datetime import datetime
 import time
 import pandas as pd
+import re
 from sentence_transformers import SentenceTransformer
 from google.cloud import aiplatform, storage
 from yaml import warnings
@@ -11,16 +12,17 @@ from calculation_function.normalize_plan_schema import normalize_plan_for_calcul
 from calculation_function.normalize_user_schema import normalize_user_for_calculation
 from calculation_function.cost_flow import calculate_net_cost
 from normalize_user.prepare_user_data import normalize_user_for_query
+from config import load_config
 
 
 # Project information
-PROJECT_ID = "project-ce1ff6dc-7e15-4f39-bb3"
-REGION = "us-central1"
+_config = load_config()
 
-ENDPOINT_RESOURCE_NAME = "projects/933786093071/locations/us-central1/indexEndpoints/7108256911664873472"
-DEPLOYED_INDEX_ID = "energy_plan_endpoint_1779775426827"
-
-MODEL_NAME = "Alibaba-NLP/gte-modernbert-base"
+PROJECT_ID = _config["PROJECT_ID"]
+REGION = _config["REGION"]
+ENDPOINT_RESOURCE_NAME = _config["ENDPOINT_RESOURCE_NAME"]
+DEPLOYED_INDEX_ID = _config["DEPLOYED_INDEX_ID"]
+MODEL_NAME = _config["MODEL_NAME"]
 
 _gcs_client = None
 _gcs_bucket = None
@@ -72,6 +74,66 @@ def get_plan_from_bucket_by_id(
 
     # Convert JSON string -> Python dict
     return json.loads(content)
+
+def normalize_text(text: str) -> str:
+    """
+    Normalize text for matching.
+
+    Example:
+        "1st Energy" -> "1st_energy"
+        "Value Saver Plus" -> "value_saver_plus"
+    """
+
+    text = str(text or "").strip().lower()
+
+    text = re.sub(r"[^a-z0-9]+", "_", text)
+
+    text = re.sub(r"_+", "_", text).strip("_")
+
+    return text
+
+def get_plan_id_from_bucket(
+    retailer_name: str,
+    display_name: str,
+    bucket_name: str,
+    gcs_prefix: str
+):
+
+    retailer_key = normalize_text(retailer_name)
+
+    blob_name = (
+        f"{gcs_prefix}/"
+        f"plan_{retailer_key}.json"
+    )
+
+    client = storage.Client()
+
+    bucket = client.bucket(bucket_name)
+
+    blob = bucket.blob(blob_name)
+
+    if not blob.exists():
+        print(f"Retailer file not found: {blob_name}")
+        return None
+
+    content = blob.download_as_text(
+        encoding="utf-8"
+    )
+
+    plan_lookup = json.loads(content)
+  
+
+    target_display_name = normalize_text(display_name)
+
+    for plan_id, plan_display_name in plan_lookup.items():
+
+        if (
+            normalize_text(plan_display_name)
+            == target_display_name
+        ):
+            return plan_id
+
+    return None
 
 def init_vertex_endpoint():
     aiplatform.init(
@@ -182,7 +244,6 @@ def get_plan_from_user(user, model, endpoint, target_k=20, per_level_top_k=50, c
     
     # Normalize user once outside the loop
     normalized_user = normalize_user_for_calculation(user)
-    print(f"Normalized user for calculation: {normalized_user}")
     
     # Prepare current plan data if comparison is needed
     current_plan_data = None
@@ -192,10 +253,30 @@ def get_plan_from_user(user, model, endpoint, target_k=20, per_level_top_k=50, c
     if current_plan_id:
         current_plan_data = get_plan_from_bucket_by_id(plan_id=current_plan_id)
         if current_plan_data:
-            print(f"Current plan {current_plan_data}")
             normalized_current_plan = normalize_plan_for_calculation(current_plan_data)
-            current_plan_cost_output = calculate_net_cost(normalized_user, normalized_current_plan)
-            print(f"CURRENT PLAN COST OUTPUT: {current_plan_cost_output}")       
+            current_plan_cost_output = calculate_net_cost(normalized_user, normalized_current_plan)     
+
+    else:
+        print(type(user_query.get("user_profile", {})))
+        user_profile = user_query.get("user_profile", "{}")["selected_profile"]
+
+        retailer_name = user_profile.get("plan").get("retailer_name")
+        display_name = user_profile.get("plan").get("current_plan_name")
+        print(f"Attempting to find current plan ID for retailer '{retailer_name}' and display name '{display_name}'")
+
+        plan_id = get_plan_id_from_bucket(
+            retailer_name=retailer_name,
+            display_name=display_name,
+            bucket_name="energy-plan-bucket-1",
+            gcs_prefix="gte-modernbert-processed-plans/plan_by_retailer"
+        )
+
+        if plan_id:
+            current_plan_data = get_plan_from_bucket_by_id(plan_id=plan_id)
+            if current_plan_data:
+                normalized_current_plan = normalize_plan_for_calculation(current_plan_data)
+                current_plan_cost_output = calculate_net_cost(normalized_user, normalized_current_plan)
+
 
     for item in retrieved:
 
@@ -301,7 +382,6 @@ def main():
         endpoint=endpoint,
         target_k=20,
         per_level_top_k=50,
-        current_plan_id="1ST937721MRE1@EME"
     )
 
     with open(
